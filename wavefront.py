@@ -23,39 +23,49 @@ def load_obj( filename: str, default_mtl='default_mtl', triangulate=False ) -> W
     """
     # parses a vertex record as either vid, vid/tid, vid//nid or vid/tid/nid
     # and returns a 3-tuple where unparsed values are replaced with -1
-    def parse_vertex( vstr ):
+    def parse_vertex( vstr ,v,vn,vt):
         vals = vstr.split('/')
-        vid = int(vals[0])-1
-        tid = int(vals[1])-1 if len(vals) > 1 and vals[1] else -1
-        nid = int(vals[2])-1 if len(vals) > 2 else -1
+        vid = int(vals[0])-1-v
+        tid = int(vals[1])-1-vt if len(vals) > 1 and vals[1] else -1
+        nid = int(vals[2])-1-vn if len(vals) > 2 else -1
         return (vid,tid,nid)
 
     obj = []
     obj_ind = 0
-    line_count = 0
+    v_count = 0
+    vn_count = 0
+    vt_count = 0
+    v_offset = 0
+    vn_offset = 0
+    vt_offset = 0
 
     with open( filename, 'r' ) as objf:
         obj.append(WavefrontOBJ(default_mtl=default_mtl))
         obj[obj_ind].path = filename
         cur_mat = obj[obj_ind].mtls.index(default_mtl)
         for line in objf:
-            line_count += 1
             toks = line.split()
             if not toks:
                 continue
-            if (toks[0] == 'o') and (line_count>1):
+            if (toks[0] == 'o') and (v_count+vn_count+vt_count>0):
                 obj.append(WavefrontOBJ(default_mtl=default_mtl))
                 obj_ind += 1
                 obj[obj_ind].path = filename
                 cur_mat = obj[obj_ind].mtls.index(default_mtl)
-            if toks[0] == 'v':
+                v_offset = v_count
+                vn_offset = vn_count
+                vt_offset = vt_count
+            elif toks[0] == 'v':
+                v_count += 1
                 obj[obj_ind].vertices.append( [ float(v) for v in toks[1:]] )
             elif toks[0] == 'vn':
+                vn_count += 1
                 obj[obj_ind].normals.append( [ float(v) for v in toks[1:]] )
             elif toks[0] == 'vt':
+                vt_count += 1
                 obj[obj_ind].texcoords.append( [ float(v) for v in toks[1:]] )
             elif toks[0] == 'f':
-                poly = [ parse_vertex(vstr) for vstr in toks[1:] ]
+                poly = [ parse_vertex(vstr,v_offset,vn_offset,vt_offset) for vstr in toks[1:] ]
                 if triangulate:
                     for i in range(2,len(poly)):
                         obj[obj_ind].mtlid.append( cur_mat )

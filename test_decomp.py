@@ -13,7 +13,7 @@ name_out = "part_vhacd2.obj"
 name_log = "log.txt"
 p.vhacd(name_in, name_out, name_log, alpha=0.04,resolution=50000 )
 
-parts = wf.load_obj(name_out)
+parts = wf.load_obj(name_out)#, triangulate=True)
 
 xyzr = np.zeros((len(parts), 4))
 part_id = 0
@@ -22,9 +22,10 @@ for part in parts:
     big_sphere = util.box2ball(bounding_box)
 
     mesh_center = util.coord_avg(part.vertices)
-    
-    xyzr[part_id,:3] = big_sphere.center 
-    xyzr[part_id,-1] = big_sphere.radius
+    small_sphere = util.inscribedSphereViaPointMesh(mesh_center, part)
+
+    xyzr[part_id,:3] = small_sphere.center 
+    xyzr[part_id,-1] = small_sphere.radius
 
     part_id += 1
 
