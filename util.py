@@ -30,7 +30,21 @@ def inscribedSphereViaPointMesh(center, mesh):
             radius = distance
 
     return sphere( center = center, radius = radius)
-        
+       
+def interpolateSphere(bigone, smallone, ratio):
+    if ratio>1.0 or ratio<0.0:
+        raise Exception("The spherical interpolation ration has to be between 0 and 1")
+    C2c = smallone.center - bigone.center
+    C2c_unit = C2c/np.linalg.norm(C2c)
+    c2b = C2c_unit*smallone.radius
+    C2B = C2c_unit*bigone.radius
+    vec1 = (C2c + c2b)*(1.0-ratio) + C2B*ratio
+    vec2 = (C2c - c2b)*(1.0-ratio) - C2B*ratio
+    C2new = (vec1 + vec2)/2.0
+    radius = np.linalg.norm(vec1-vec2)/2.0
+    center = bigone.center + C2new
+    return sphere( center = center, radius = radius)
+
 def box2ball(box):
     ball = sphere(  
                     center = [(box[0,0]+box[1,0])/2.0, (box[0,1]+box[1,1])/2.0, (box[0,2]+box[1,2])/2.0],

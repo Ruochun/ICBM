@@ -8,10 +8,10 @@ import numpy as np
 csv_out = "result.csv"
 
 p.connect(p.DIRECT)
-name_in = "part.obj"#os.path.join(pd.getDataPath(), "part.obj")
+name_in = "bear.obj"#os.path.join(pd.getDataPath(), "part.obj")
 name_out = "part_vhacd2.obj"
 name_log = "log.txt"
-p.vhacd(name_in, name_out, name_log, alpha=0.04,resolution=50000 )
+p.vhacd(name_in, name_out, name_log, concavity=0.0000,alpha=0.04,resolution=500000 )
 
 parts = wf.load_obj(name_out)#, triangulate=True)
 
@@ -24,8 +24,9 @@ for part in parts:
     mesh_center = util.coord_avg(part.vertices)
     small_sphere = util.inscribedSphereViaPointMesh(mesh_center, part)
 
-    xyzr[part_id,:3] = small_sphere.center 
-    xyzr[part_id,-1] = small_sphere.radius
+    decomp_sphere = util.interpolateSphere(big_sphere, small_sphere, 0.5)
+    xyzr[part_id,:3] = decomp_sphere.center 
+    xyzr[part_id,-1] = decomp_sphere.radius
 
     part_id += 1
 
