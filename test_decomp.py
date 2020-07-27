@@ -35,7 +35,7 @@ for part in parts:
     mesh_center = util.coord_avg(part.vertices)
     small_sphere = util.inscribedSphereViaPointMesh(mesh_center, part)
 
-    decomp_sphere = util.interpolateSphere(big_sphere, small_sphere, 0.5)
+    decomp_sphere = util.interpolateSphere(big_sphere, small_sphere, args.ratio)
     xyzr[part_id,:3] = decomp_sphere.center 
     xyzr[part_id,-1] = decomp_sphere.radius
 
