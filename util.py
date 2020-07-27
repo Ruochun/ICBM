@@ -35,14 +35,19 @@ def interpolateSphere(bigone, smallone, ratio):
     if ratio>1.0 or ratio<0.0:
         raise Exception("The spherical interpolation ration has to be between 0 and 1")
     C2c = smallone.center - bigone.center
-    C2c_unit = C2c/np.linalg.norm(C2c)
-    c2b = C2c_unit*smallone.radius
-    C2B = C2c_unit*bigone.radius
-    vec1 = (C2c + c2b)*(1.0-ratio) + C2B*ratio
-    vec2 = (C2c - c2b)*(1.0-ratio) - C2B*ratio
-    C2new = (vec1 + vec2)/2.0
-    radius = np.linalg.norm(vec1-vec2)/2.0
-    center = bigone.center + C2new
+    distC2c = np.linalg.norm(C2c)
+    if distC2c > 1e-6:
+        C2c_unit = C2c/distC2c
+        c2b = C2c_unit*smallone.radius
+        C2B = C2c_unit*bigone.radius
+        vec1 = (C2c + c2b)*(1.0-ratio) + C2B*ratio
+        vec2 = (C2c - c2b)*(1.0-ratio) - C2B*ratio
+        C2new = (vec1 + vec2)/2.0
+        radius = np.linalg.norm(vec1-vec2)/2.0
+        center = bigone.center + C2new
+    else:
+        center = bigone.center
+        radius = smallone.radius*(1.0-ratio) + bigone.radius*ratio
     return sphere( center = center, radius = radius)
 
 def box2ball(box):
