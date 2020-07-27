@@ -1,7 +1,7 @@
 # ICBM
 Ice Cream Ball Maker
 
-It makes overlapping incecream balls that fill up a mesh.
+It makes overlapping icecream balls that fill up a mesh.
 
 To use it, first install Pybullet:
 pip3 install pybullet --upgrade --user
