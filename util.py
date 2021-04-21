@@ -5,6 +5,9 @@ class sphere:
         self.center = np.array(center)
         self.radius = radius
 
+def EucDistSq(a, b):
+    return (a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2
+
 def getNormal(P,Q,R):
     V = Q-P
     W = R-P
@@ -72,5 +75,16 @@ def coord_avg(verts):
     center = np.array([float(sum(xs)/len(xs)), float(sum(ys)/len(ys)), float(sum(zs)/len(zs))])
     return center
 
+def findClosestSphere(verts, spheres):
+    num_list = np.zeros(len(verts)).astype(int)
+    for i in range(len(verts)):
+        min_dist = 1e30
+        for j in range(len(spheres)):
+            dist = EucDistSq(verts[i], spheres[j, :3])
+            if dist < min_dist:
+                min_dist = dist
+                num_list[i] = j
+
+    return num_list
 
 

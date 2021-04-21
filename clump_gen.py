@@ -3,13 +3,15 @@ import pybullet as p
 import os
 import wavefront as wf
 import util
+import optimization as opt
 import numpy as np
 import argparse, sys
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=
         argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--input_obj", "-i", type=str, dest="input_obj", default="mesh.obj", help="File name of the .obj input")
-parser.add_argument("--output_csv", "-o", type=str, dest="output_csv", default="result.csv", help="File name of the .csv output")
+parser.add_argument("--output_csv", "-o", type=str, dest="output_csv", default="result.csv", help="File name of the .csv output (after optimization)")
+parser.add_argument("--approx_csv", "-a", type=str, dest="approx_csv", default="quick_approx.csv", help="File name of a quick approximation of the decomposition (before optimization)")
 parser.add_argument("--convex_obj", "-c", type=str, dest="convex_obj", default="parts.obj", help="File name of the intermediate .obj convex shapes")
 parser.add_argument("--convex_log", type=str, dest="convex_log", default="log.txt", help="File name of the intermediate convex decomposition logs")
 parser.add_argument("--interpolate_ratio", "-r", type=float, dest="ratio", default=0.5,  
@@ -17,6 +19,10 @@ parser.add_argument("--interpolate_ratio", "-r", type=float, dest="ratio", defau
 parser.add_argument("--voxel_resolution", "-v", type=int, dest="voxel_resolution", default=50000,
 			help="The resolution at which the convex decomposition takes place; larger number usually leads to more final spheres")
 args = parser.parse_args(sys.argv[1:])
+
+original_meshes = wf.load_obj(args.input_obj)
+assert len(original_meshes) == 1, "This script handles OBJ with one mesh group only."
+mesh = original_meshes[0]
 
 p.connect(p.DIRECT)
 
@@ -41,7 +47,11 @@ for part in parts:
 
     part_id += 1
 
-np.savetxt(args.output_csv, xyzr, header = "x,y,z,r", delimiter=",")
+np.savetxt(args.approx_csv, xyzr, header = "x,y,z,r", delimiter=",")
 
+# The ball number which this vertex got assigned to.
+assign_list = util.findClosestSphere(mesh.vertices, xyzr)
+opt_spheres = opt.optimizeAsgdSpheresFromVert(mesh.vertices, xyzr, assign_list)
+np.savetxt(args.output_csv, opt_spheres, header = "x,y,z,r", delimiter=",")
 
 
