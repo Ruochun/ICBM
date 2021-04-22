@@ -20,6 +20,11 @@ def getTri(v):
 def getPointPlaneDist(point, planePoint, normal):
     return abs(np.dot(point-planePoint, normal))
 
+def pointInBox(pnt, corner1, corner2):
+    mid = [(corner1[0] + corner2[0]) / 2.0, (corner1[1] + corner2[1]) / 2.0, (corner1[2] + corner2[2]) / 2.0]
+    hdim = [abs(corner1[0] - corner2[0]) / 2.0, abs(corner1[1] - corner2[1]) / 2.0, abs(corner1[2] - corner2[2]) / 2.0]
+    return (abs(pnt[0] - mid[0]) <= hdim[0]) and (abs(pnt[1] - mid[1]) <= hdim[1]) and (abs(pnt[2] - mid[2]) <= hdim[2])
+
 def inscribedSphereViaPointMesh(center, mesh):
     radius = 1e10
     for v_vt_vn in mesh.polygons:

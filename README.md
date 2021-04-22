@@ -7,6 +7,7 @@ To use it, first install Pybullet:
 pip3 install pybullet --upgrade --user
 
 Then call the script, something like this (a bear.obj demo is included):
-python3 clump_gen.py -i bear.obj -o result.csv -c parts.obj -v 1000000 -r 0.6
+python3 convex_then_clump.py -i bear.obj -o result.csv -c parts.obj -v 1000000 -r 0.6
+python3 sample_then_clump.py -i football.obj -o result.csv -n 50
 
 
