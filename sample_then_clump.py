@@ -45,6 +45,14 @@ xyzr = good_sample
 del good_sample
 
 # The ball number which this vertex got assigned to.
+"""
+indices = np.arange(len(xyzr))
+radii_dict = dict(zip(indices, xyzr[:, -1]))
+radii_dict = sorted(radii_dict.items(), key=lambda item: item[1])
+retained = radii_dict[:args.budget]
+xyzr = xyzr[[item[0] for item in retained], :]
+assign_list = util.findClosestSphere(mesh.vertices, xyzr)
+"""
 assign_list = util.findClosestSphere(mesh.vertices, xyzr)
 unique, counts = np.unique(assign_list, return_counts=True)
 if len(unique) > args.budget:
@@ -55,6 +63,8 @@ if len(unique) > args.budget:
     assign_list = util.findClosestSphere(mesh.vertices, xyzr)
 elif len(unique) < args.budget:
     print("WARNING! We just got "+str(len(unique))+" spheres in the clump and it is lower than the target amount.\n")
+
+
 np.savetxt(args.approx_csv, xyzr, header = "x,y,z,r", delimiter=",")
 
 opt_spheres = opt.optimizeAsgdSpheresFromVert(mesh.vertices, xyzr, assign_list)
