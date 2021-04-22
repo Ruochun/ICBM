@@ -29,7 +29,7 @@ for i in range(args.number_sample):
 
 # pick the good spheres
 mesh_bbox = util.bbox(mesh.vertices)
-max_radius = np.sqrt(util.EucDistSq(mesh_bbox[0], mesh_bbox[1])) / 2.0
+max_radius = util.EucDist(mesh_bbox[0], mesh_bbox[1]) / 2.0
 retain_list = []
 for i in range(initial_sample.shape[0]):
     if not(np.isfinite(initial_sample[i, :]).all()): continue # git rid of nan

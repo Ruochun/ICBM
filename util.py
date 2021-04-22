@@ -5,8 +5,8 @@ class sphere:
         self.center = np.array(center)
         self.radius = radius
 
-def EucDistSq(a, b):
-    return (a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2
+def EucDist(a, b):
+    return np.sqrt( (a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2 )
 
 def getNormal(P,Q,R):
     V = Q-P
@@ -85,7 +85,7 @@ def findClosestSphere(verts, spheres):
     for i in range(len(verts)):
         min_dist = 1e30
         for j in range(len(spheres)):
-            dist = EucDistSq(verts[i], spheres[j, :3])
+            dist = abs(EucDist(verts[i], spheres[j, :3]) - spheres[j, -1])
             if dist < min_dist:
                 min_dist = dist
                 num_list[i] = j
