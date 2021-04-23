@@ -18,6 +18,7 @@ parser.add_argument("--interpolate_ratio", "-r", type=float, dest="ratio", defau
 			help="Must be in [0,1]; set it close to 1 to make the final output spheres large, close to 0 to make them small")
 parser.add_argument("--voxel_resolution", "-v", type=int, dest="voxel_resolution", default=50000,
 			help="The resolution at which the convex decomposition takes place; larger number usually leads to more final spheres")
+parser.add_argument("--max_hull_verts", type=int, dest="max_hull_verts", default=64, help="The max number of vertices of one convex hull")
 args = parser.parse_args(sys.argv[1:])
 
 original_meshes = wf.load_obj(args.input_obj)
@@ -27,7 +28,8 @@ mesh = original_meshes[0]
 p.connect(p.DIRECT)
 
 ############## IF OTHER CONVEX DECOMPOSITION PARAM NEEDED TO CHANGE: PLEASE DIRECTLY CHANGE THEM HERE #######################
-p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alpha=0.04, resolution=args.voxel_resolution)
+p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alpha=0.04, 
+        resolution=args.voxel_resolution, maxNumVerticesPerCH=args.max_hull_verts)
 #############################################################################################################################
 
 parts = wf.load_obj(args.convex_obj)#, triangulate=True)

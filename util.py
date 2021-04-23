@@ -17,8 +17,12 @@ def getNormal(P,Q,R):
 def getTri(v):
     return np.array([ v[0][0], v[1][0], v[2][0] ])
 
+# it is signed distance: postive = from inside mesh
 def getPointPlaneDist(point, planePoint, normal):
-    return abs(np.dot(point-planePoint, normal))
+    return np.dot(planePoint - point, normal)
+
+def getBoxDim(corner1, corner2):
+    return np.array([abs(corner1[0] - corner2[0]), abs(corner1[1] - corner2[1]), abs(corner1[2] - corner2[2])])
 
 def pointInBox(pnt, corner1, corner2):
     mid = [(corner1[0] + corner2[0]) / 2.0, (corner1[1] + corner2[1]) / 2.0, (corner1[2] + corner2[2]) / 2.0]
@@ -33,7 +37,7 @@ def inscribedSphereViaPointMesh(center, mesh):
         Q = np.array(mesh.vertices[tri[1]])
         R = np.array(mesh.vertices[tri[2]])
         normal = getNormal(P,Q,R)
-        distance = getPointPlaneDist(center, P, normal)
+        distance = abs(getPointPlaneDist(center, P, normal))
         if distance<radius:
             radius = distance
 
@@ -57,6 +61,26 @@ def interpolateSphere(bigone, smallone, ratio):
         center = bigone.center
         radius = smallone.radius*(1.0-ratio) + bigone.radius*ratio
     return sphere( center = center, radius = radius)
+
+# find closest facet in mesh, and then see if the signed distance is positive.
+# this should work for not-too-crazy shapes, not necessarily convex.
+# If the mesh is convex, it can be easier, all signed_dist should be positive.
+def pointInMesh(point, mesh):
+    smallest_dist = 1e30
+    isPositive = False
+    for v_vt_vn in mesh.polygons:
+        tri = getTri(v_vt_vn)
+        P = np.array(mesh.vertices[tri[0]])
+        Q = np.array(mesh.vertices[tri[1]])
+        R = np.array(mesh.vertices[tri[2]])
+        pTriDist = min([EucDist(point, P), EucDist(point, Q), EucDist(point, R)])
+        if pTriDist < smallest_dist:
+            smallest_dist = pTriDist
+            normal = getNormal(P,Q,R)
+            signed_dist = getPointPlaneDist(point, P, normal)
+            isPositive = True if signed_dist > 0.0 else False
+    
+    return isPositive
 
 def box2ball(box):
     ball = sphere(  
