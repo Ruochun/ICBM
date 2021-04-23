@@ -1,4 +1,6 @@
 import numpy as np
+import trimesh as tm
+import wavefront as wf
 
 class sphere:
     def __init__(self, center = [0.0,0.0,0.0], radius=1.0):
@@ -115,5 +117,20 @@ def findClosestSphere(verts, spheres):
                 num_list[i] = j
 
     return num_list
+
+def sliceMesh(mesh, normal, origin):
+    verts = np.array(mesh.vertices)
+    faces = np.empty((len(verts), 3), dtype=int)
+    for i in range(len(faces)):
+        faces[i, :] = [mesh.polygons[i][0][0], mesh.polygons[i][1][0], mesh.polygons[i][2][0]]
+    
+    new_v, new_f = tm.intersections.slice_faces_plane(verts, faces, normal, origin)
+    new_mesh = wf.WavefrontOBJ()
+    for i in range(len(new_v)):
+        new_mesh.vertices.append(new_v[i, :])
+    for i in range(len(new_f)):
+        new_mesh.polygons.append([[new_f[i,0], -1], [new_f[i,1], -1], [new_f[i,2], -1]])
+
+    return new_mesh
 
 

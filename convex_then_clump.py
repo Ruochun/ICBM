@@ -19,6 +19,7 @@ parser.add_argument("--interpolate_ratio", "-r", type=float, dest="ratio", defau
 parser.add_argument("--voxel_resolution", "-v", type=int, dest="voxel_resolution", default=50000,
 			help="The resolution at which the convex decomposition takes place; larger number usually leads to more final spheres")
 parser.add_argument("--max_hull_verts", type=int, dest="max_hull_verts", default=64, help="The max number of vertices of one convex hull")
+parser.add_argument("--budget", "-b", type=int, dest="budget", default=5, help="The target number of spheres we want")
 args = parser.parse_args(sys.argv[1:])
 
 original_meshes = wf.load_obj(args.input_obj)
@@ -33,10 +34,15 @@ p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alph
 #############################################################################################################################
 
 parts = wf.load_obj(args.convex_obj)#, triangulate=True)
+parts.append(util.sliceMesh(parts[0], [0,0,1], [0,0,40]))
+parts[0] = util.sliceMesh(parts[0], [0,0,-1], [0,0,40])
+parts.append(util.sliceMesh(parts[0], [0,0,-1], [0,0,-40]))
+parts[0] = util.sliceMesh(parts[0], [0,0,1], [0,0,-40])
 
 xyzr = np.zeros((len(parts), 4))
 part_id = 0
 for part in parts:
+
     bounding_box = util.bbox(part.vertices)
     big_sphere = util.box2ball(bounding_box)
 
