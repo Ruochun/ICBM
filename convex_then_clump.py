@@ -34,10 +34,17 @@ p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alph
 #############################################################################################################################
 
 parts = wf.load_obj(args.convex_obj)#, triangulate=True)
-parts.append(util.sliceMesh(parts[0], [0,0,1], [0,0,40]))
-parts[0] = util.sliceMesh(parts[0], [0,0,-1], [0,0,40])
-parts.append(util.sliceMesh(parts[0], [0,0,-1], [0,0,-40]))
-parts[0] = util.sliceMesh(parts[0], [0,0,1], [0,0,-40])
+parts.append(util.sliceMesh(parts[0], [0,0,1], [0,0,35]))
+parts[0] = util.sliceMesh(parts[0], [0,0,-1], [0,0,35])
+
+parts.append(util.sliceMesh(parts[1], [0,0,1], [0,0,70]))
+parts[1] = util.sliceMesh(parts[1], [0,0,-1], [0,0,70])
+
+parts.append(util.sliceMesh(parts[0], [0,0,-1], [0,0,-35]))
+parts[0] = util.sliceMesh(parts[0], [0,0,1], [0,0,-35])
+
+parts.append(util.sliceMesh(parts[3], [0,0,-1], [0,0,-70]))
+parts[3] = util.sliceMesh(parts[3], [0,0,1], [0,0,-70])
 
 xyzr = np.zeros((len(parts), 4))
 part_id = 0

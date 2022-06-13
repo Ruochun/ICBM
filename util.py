@@ -120,7 +120,7 @@ def findClosestSphere(verts, spheres):
 
 def sliceMesh(mesh, normal, origin):
     verts = np.array(mesh.vertices)
-    faces = np.empty((len(verts), 3), dtype=int)
+    faces = np.empty((len(mesh.polygons), 3), dtype=int)
     for i in range(len(faces)):
         faces[i, :] = [mesh.polygons[i][0][0], mesh.polygons[i][1][0], mesh.polygons[i][2][0]]
     
