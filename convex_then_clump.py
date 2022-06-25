@@ -36,8 +36,8 @@ p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alph
 parts = []
 parts.append(wf.load_obj(args.convex_obj)[0])
 
-planes = [[0,0,90],[0,0,50],[0,0,20],[0,0,-20],[0,0,-50],[0,0,-90]]
-normals = [[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1]]
+planes = [[0,0,100],[0,0,80],[0,0,40],[0,0,0],[0,0,-40],[0,0,-80],[0,0,-100]]
+normals = [[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1]]
 
 for i in range(len(planes)):
     plane = np.array(planes[i])
