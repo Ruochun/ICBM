@@ -32,25 +32,25 @@ p.connect(p.DIRECT)
 p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alpha=0.04, 
         resolution=args.voxel_resolution, maxNumVerticesPerCH=args.max_hull_verts)
 #############################################################################################################################
-#part = wf.load_obj(args.convex_obj)#, triangulate=True)
-parts = []
-parts.append(wf.load_obj(args.convex_obj)[0])
+parts = wf.load_obj(args.convex_obj)#, triangulate=True)
+if (len(parts) == 1):
+    parts = []
+    parts.append(wf.load_obj(args.convex_obj)[0])
 
-planes = [[0,0,100],[0,0,80],[0,0,40],[0,0,0],[0,0,-40],[0,0,-80],[0,0,-100]]
-normals = [[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1]]
-
-for i in range(len(planes)):
-    plane = np.array(planes[i])
-    normal = np.array(normals[i])
-    cut_result = []
-    for part in parts:
-        halfA = util.sliceMesh(part, normal, plane)
-        halfB = util.sliceMesh(part, -normal, plane)
-        if len(halfA.vertices) > 0:
-            cut_result.append(halfA)
-        if len(halfB.vertices) > 0:
-            cut_result.append(halfB)
-    parts = cut_result
+    planes = [[0,0,100],[0,0,80],[0,0,40],[0,0,0],[0,0,-40],[0,0,-80],[0,0,-100]]
+    normals = [[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1]]
+    for i in range(len(planes)):
+        plane = np.array(planes[i])
+        normal = np.array(normals[i])
+        cut_result = []
+        for part in parts:
+            halfA = util.sliceMesh(part, normal, plane)
+            halfB = util.sliceMesh(part, -normal, plane)
+            if len(halfA.vertices) > 0:
+                cut_result.append(halfA)
+            if len(halfB.vertices) > 0:
+                cut_result.append(halfB)
+        parts = cut_result
 
 xyzr = np.zeros((len(parts), 4))
 part_id = 0
