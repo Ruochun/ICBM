@@ -46,8 +46,6 @@ def inscribedSphereViaPointMesh(center, mesh):
     return sphere( center = center, radius = radius)
        
 def interpolateSphere(bigone, smallone, ratio):
-    if ratio>1.0 or ratio<0.0:
-        raise Exception("The spherical interpolation ration has to be between 0 and 1")
     C2c = smallone.center - bigone.center
     distC2c = np.linalg.norm(C2c)
     if distC2c > 1e-6:
@@ -133,4 +131,22 @@ def sliceMesh(mesh, normal, origin):
 
     return new_mesh
 
+def getLargeSmallSphere(mesh):
+    bounding_box = bbox(mesh.vertices)
+    big_sphere = box2ball(bounding_box)
+    mesh_center = coord_avg(mesh.vertices)
+    small_sphere = inscribedSphereViaPointMesh(mesh_center, mesh)
+    return big_sphere, small_sphere
 
+def updatePartQuality(part, largest_sphere, smallest_sphere, ratio):
+    # quality is defined by the ratio between the small_sphere and big_sphere
+    big_sphere, small_sphere = getLargeSmallSphere(part)
+    part.quality = small_sphere.radius / big_sphere.radius * 1000.
+
+    expected_size = interpolateSphere(big_sphere, small_sphere, ratio).radius
+
+    # but if the sphere is big, it is considered worse
+    part.quality /= expected_size
+
+    # And if the sphere is too large, it is considered much worse
+    part.quality /= max(1.0, 10 * np.exp(expected_size / largest_sphere)**3)

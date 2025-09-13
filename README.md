@@ -15,9 +15,7 @@ Then call the script, something like this (a bear.obj demo is included):
 
 python3 convex_then_clump.py -i bear.obj -o result.csv -c parts.obj -v 1000000 -r 0.6
 
-python3 convex_then_clump.py -i football_refined.obj -o result.csv -c parts.obj -v 1000000 -r 0.1
-
-python3 convex_then_clump.py -i football_5_2.obj -o result.csv -c parts.obj -v 1000000 -r 0.1
+python3 convex_then_clump.py -i bmcContainer.obj -o result.csv -r 0.6 -c parts.obj -v 5000000 -r 0.7 -b 700 -s 6 -l 8
 
 There is an old implementation but I do not think it works well...:
 

@@ -20,7 +20,12 @@ parser.add_argument("--voxel_resolution", "-v", type=int, dest="voxel_resolution
 			help="The resolution at which the convex decomposition takes place; larger number usually leads to more final spheres")
 parser.add_argument("--max_hull_verts", type=int, dest="max_hull_verts", default=64, help="The max number of vertices of one convex hull")
 parser.add_argument("--budget", "-b", type=int, dest="budget", default=5, help="The target number of spheres we want")
+parser.add_argument("--largest_sphere", "-l", type=float, dest="largest_sphere", default=1e9, help="The radius of the largest sphere allowed")
+parser.add_argument("--smallest_sphere", "-s", type=float, dest="smallest_sphere", default=1e-9, help="The radius of the smallest sphere allowed")
 args = parser.parse_args(sys.argv[1:])
+
+if args.ratio>1.0 or args.ratio<0.0:
+    raise Exception("The spherical interpolation ration has to be between 0 and 1")
 
 original_meshes = wf.load_obj(args.input_obj)
 assert len(original_meshes) == 1, "This script handles OBJ with one mesh group only."
@@ -33,34 +38,79 @@ p.vhacd(args.input_obj, args.convex_obj, args.convex_log, concavity=0.0025, alph
         resolution=args.voxel_resolution, maxNumVerticesPerCH=args.max_hull_verts)
 #############################################################################################################################
 parts = wf.load_obj(args.convex_obj)#, triangulate=True)
-if (len(parts) == 1):
-    parts = []
-    parts.append(wf.load_obj(args.convex_obj)[0])
 
-    planes = [[0,0,100],[0,0,80],[0,0,40],[0,0,0],[0,0,-40],[0,0,-80],[0,0,-100]]
-    normals = [[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1]]
+# preprocess and sort parts by quality
+for part in parts:
+    # quality is defined by the ratio between the small_sphere and big_sphere
+    util.updatePartQuality(part, args.largest_sphere, args.smallest_sphere, args.ratio)
+
+# Now, subdivide bad-quality parts, until the number of parts reaches budget
+while len(parts) < args.budget:
+    # resort
+    parts.sort(key=lambda x: x.quality)
+    # find the worst-quality part
+    worst_id = 0
+    found = False
+    # but if the expected size is already small enough, we move on to the next worst
+    for i in range(len(parts)):
+        big_sphere, small_sphere = util.getLargeSmallSphere(parts[i])
+        expected_size = util.interpolateSphere(big_sphere, small_sphere, args.ratio).radius
+        if expected_size > args.smallest_sphere:
+            worst_id = i
+            found = True
+            print("Current number of parts: %d. Worst part is %d with quality %.4f and expected size %.4f" % (len(parts), worst_id, parts[worst_id].quality, expected_size))
+            break
+    if not found:
+        print("All parts are small enough. Stopping at %d parts." % len(parts))
+        break
+
+    worst_part = parts[worst_id]
+    # subdivide it into two parts, by cutting along the longest axis of this mesh
+    bounding_box = util.bbox(worst_part.vertices)
+    longest_axis = np.argmax(bounding_box[1,:] - bounding_box[0,:])
+    axis_center = (bounding_box[1,longest_axis] + bounding_box[0,longest_axis]) / 2.0
+    # cutting plane's center is the center of the bounding box
+    plane_center = (bounding_box[1,:] - bounding_box[0,:]) / 2.0 + bounding_box[0,:]
+    # cutting normal direction is along the longest axis
+    plane_normal = np.array([0.0,0.0,0.0])
+    plane_normal[longest_axis] = 1.0
+
+    cutted_parts = []
+    cutted_parts.append(worst_part)
+
+    planes = [plane_center]
+    normals = [plane_normal]
+    # print("Cutting part %d along axis %d at %.4f" % (worst_id, longest_axis, axis_center))
+
     for i in range(len(planes)):
         plane = np.array(planes[i])
         normal = np.array(normals[i])
-        cut_result = []
-        for part in parts:
+        this_cut_result = []
+        for part in cutted_parts:
             halfA = util.sliceMesh(part, normal, plane)
             halfB = util.sliceMesh(part, -normal, plane)
             if len(halfA.vertices) > 0:
-                cut_result.append(halfA)
+                this_cut_result.append(halfA)
             if len(halfB.vertices) > 0:
-                cut_result.append(halfB)
-        parts = cut_result
+                this_cut_result.append(halfB)
+        cutted_parts = this_cut_result
 
-xyzr = np.zeros((len(parts), 4))
+    # newly generated parts quality update
+    for part in cutted_parts:
+        util.updatePartQuality(part, args.largest_sphere, args.smallest_sphere, args.ratio)
+
+    # replace the worst part by the two new parts
+    parts.pop(worst_id)
+    for part in cutted_parts:
+        parts.append(part)
+    
+
+# assign spheres to each part
 part_id = 0
+xyzr = np.zeros((len(parts), 4))
 for part in parts:
 
-    bounding_box = util.bbox(part.vertices)
-    big_sphere = util.box2ball(bounding_box)
-
-    mesh_center = util.coord_avg(part.vertices)
-    small_sphere = util.inscribedSphereViaPointMesh(mesh_center, part)
+    big_sphere, small_sphere = util.getLargeSmallSphere(part)
 
     decomp_sphere = util.interpolateSphere(big_sphere, small_sphere, args.ratio)
     xyzr[part_id,:3] = decomp_sphere.center 
@@ -71,8 +121,10 @@ for part in parts:
 np.savetxt(args.approx_csv, xyzr, header = "x,y,z,r", delimiter=",")
 
 # The ball number which this vertex got assigned to.
-assign_list = util.findClosestSphere(mesh.vertices, xyzr)
-opt_spheres = opt.optimizeAsgdSpheresFromVert(mesh.vertices, xyzr, assign_list)
-np.savetxt(args.output_csv, opt_spheres, header = "x,y,z,r", delimiter=",")
+# TODO: Temporarily disable optimization for better stability
+
+# assign_list = util.findClosestSphere(mesh.vertices, xyzr)
+# opt_spheres = opt.optimizeAsgdSpheresFromVert(mesh.vertices, xyzr, assign_list)
+# np.savetxt(args.output_csv, opt_spheres, header = "x,y,z,r", delimiter=",")
 
 
